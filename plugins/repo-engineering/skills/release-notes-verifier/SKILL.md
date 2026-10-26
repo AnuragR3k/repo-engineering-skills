@@ -1,6 +1,6 @@
 ---
 name: release-notes-verifier
-description: Check a release's notes against what actually changed, with a bundled script that reads the commits between two tags (and, only when asked, pull request titles through a read-only gh call) and compares them with the CHANGELOG section or a release notes file, flagging notes that match no commit, commits with no note (chores excluded by a configurable pattern), manifest versions that disagree with the tag, and missing compare or reference links. Use when asked "are the release notes complete?", "check the changelog before we tag", "did we forget anything in the release notes?", "does every version field match the tag?", or as a release CI gate. Not for writing release notes from scratch without checking them, not for semantic version policy decisions, and not for detecting breaking API changes.
+description: "Check a release's notes against what changed between two tags, flagging notes that match no commit, commits with no note (chores excluded by a pattern), manifest versions that disagree with the tag, and missing compare links; pull request titles are read only when asked. Use when asked \"are the release notes complete?\", before tagging, or as a release CI gate. Not for drafting notes from commits (release-notes), semantic version policy, or detecting breaking API changes."
 license: MIT
 compatibility: Python 3.11 or newer on PATH as python3, and git. Standard library only. Network only with --gh (the gh CLI, read-only).
 metadata:
@@ -34,6 +34,8 @@ A note is "matched" only when the script matched it to a commit (by PR number, S
    ```
 
    The changelog is read from the `--to` revision, so commit it first. The version comes from the `--to` name (`v0.2.0` gives `0.2.0`); before the tag exists, use `--to HEAD --version 0.2.0`.
+
+   If this skill was copied into `.claude/skills/` without the plugin system, `${CLAUDE_PLUGIN_ROOT}` is empty. Replace `${CLAUDE_PLUGIN_ROOT}/skills/release-notes-verifier` with the path to this skill's folder, for example `.claude/skills/release-notes-verifier`, and run the command from the repository root. The same applies to any other script command in this skill.
 
 2. **Optionally read pull request titles** with `--gh` when the repository squash-merges and commit subjects are terse. Ask the user first: it calls `gh pr view` (read-only) and so contacts GitHub.
 
@@ -99,3 +101,4 @@ Matching: a note matches a commit when it names the commit's PR number (`#12`) o
 
 - `docs-truth-check` for version strings and paths in the README itself.
 - `adr-miner` to turn decision-sized commits found here into ADR stubs.
+- `release-notes` (devops plugin, claude-dev-skills): release-notes drafts notes from commits; release-notes-verifier checks finished notes against the tag range and runs as a CI gate.

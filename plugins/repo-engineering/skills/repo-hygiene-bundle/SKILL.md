@@ -1,6 +1,6 @@
 ---
 name: repo-hygiene-bundle
-description: Run one offline hygiene pass over a repository with a bundled script and report each finding with a severity, as a table, JSON or SARIF, with an exit code for CI. Checks dependency manifests without lockfiles, lockfile drift, the same dependency at different versions across workspaces, a missing licence file and missing or non-SPDX licence fields, secret-shaped strings (printed redacted), GitHub Actions used by tag instead of commit SHA, workflows with write-all permissions, missing SECURITY.md and CODE_OF_CONDUCT.md, large files and committed build output. Use when asked to "check repo hygiene", "is this repository ready to open source?", "add a hygiene gate to CI", "are our actions pinned?", "do we commit secrets or lockfiles?", or before a release or a handover. Not a vulnerability scanner (no advisory database, no network), not a full secret scanner with history search, and not a licence compatibility audit of the dependency tree.
+description: "Run one offline hygiene pass over a repository and report findings with severity as a table, JSON or SARIF with a CI exit code, covering manifests without lockfiles, lockfile drift, version splits across workspaces, missing licence or SPDX fields, redacted secret-shaped strings, actions pinned by tag, write-all workflows, missing SECURITY.md, and large or built files. Use when asked \"is this repository ready to open source?\" or to add a hygiene gate to CI. Not for vulnerability scanning, secret search through history, or licence compatibility audits."
 license: MIT
 compatibility: Python 3.11 or newer on PATH as python3. Standard library only, no network access. Uses git ls-files when git is available.
 metadata:
@@ -34,6 +34,8 @@ Report the script's findings as found, with their rule ids and locations, and op
    ```
 
    In a git work tree only committed or staged files are read (`git ls-files`); otherwise the folder is walked.
+
+   If this skill was copied into `.claude/skills/` without the plugin system, `${CLAUDE_PLUGIN_ROOT}` is empty. Replace `${CLAUDE_PLUGIN_ROOT}/skills/repo-hygiene-bundle` with the path to this skill's folder, for example `.claude/skills/repo-hygiene-bundle`, and run the command from the repository root. The same applies to any other script command in this skill.
 
 2. **Handle `high` findings first.** For `HYG-SECRET`: open the line, decide whether it is a real credential, a test value or a placeholder. If it may be real, tell the user to rotate it at the issuer and remove it from history; do not try the value. For `HYG-PERMS` write-all: propose the narrowest `permissions:` block the jobs need.
 
@@ -106,4 +108,6 @@ A line containing `hygiene: ignore` is skipped by the secret check, for document
 ## Related
 
 - `cited-codebase-audit` for a broader audit whose findings cite lines; its `ci-health` and `secrets-config` categories can start from this report.
+- `stale-branch-sweep`: reports merged and idle remote branches with delete commands for review; this skill does not look at branches.
 - Anthropic's `claude-security` plugin covers vulnerability scanning of code; this skill covers repository hygiene around it.
+- `github-actions-author` (devops plugin, claude-dev-skills): github-actions-author writes and lints one workflow; repo-hygiene-bundle only flags unpinned actions and write-all permissions across the repository.

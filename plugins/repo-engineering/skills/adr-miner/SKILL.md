@@ -1,6 +1,6 @@
 ---
 name: adr-miner
-description: Recover architecture decisions that were made but never written down, by mining git history (commit messages with decision phrases such as switch to, replace, adopt, drop, migrate, deprecate, in favour of), configuration changes (a dependency swapped in a manifest, a Dockerfile base image changed, CI files added or removed) and TODO or NOTE comments that carry a rationale, then drafting MADR stubs with status proposed that cite the commit SHA for every line; a second script lints an existing docs/adr folder for numbering gaps, duplicate numbers, missing or unknown status and broken superseded links. Use when asked "why did we switch to X?", "write ADRs for decisions we already made", "backfill our architecture decision records", "document the history of this codebase", or "check our ADR folder". Not for recording a decision being made right now from scratch (write that ADR directly), and not a changelog generator.
+description: "Recover design decisions that were made but never written down by mining git history, manifest and config changes and rationale comments, then draft MADR stubs (status proposed) that cite a commit SHA on every line; a second script lints an existing docs/adr folder for numbering, status and superseded-link problems. Use when asked \"why did we switch to X?\", to dig old decisions out of git history, or to backfill ADRs. Not for writing a new architecture decision record or a decision being made now (adr-writer, or decision-log for operational decisions) or generating a changelog."
 license: MIT
 compatibility: Python 3.11 or newer on PATH as python3, and git. Standard library only, no network access.
 metadata:
@@ -33,6 +33,10 @@ Every sentence in a stub must trace to a cited commit, diff line or comment. Do 
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/adr-miner/scripts/adr_mine.py" . --range v1.0.0..HEAD --json
    ```
 
+   Test fixtures and vendored code produce config and comment candidates that are not decisions; leave them out with `--exclude tests/fixtures` (repeatable).
+
+   If this skill was copied into `.claude/skills/` without the plugin system, `${CLAUDE_PLUGIN_ROOT}` is empty. Replace `${CLAUDE_PLUGIN_ROOT}/skills/adr-miner` with the path to this skill's folder, for example `.claude/skills/adr-miner`, and run the command from the repository root. The same applies to any other script command in this skill.
+
 2. **Triage with the user.** Show the list (source, title, SHA, date, reasons). Most repositories produce more candidates than decisions; drop routine bumps and typo-level "replace" commits. Keep a candidate when it changed how the system is built, run or depended on.
 
 3. **Read each kept candidate's evidence**: `git show <sha>` for the full diff, the pull request if one is linked, the comment and its surrounding code. Note anything the stub can cite (an issue number, a benchmark in the PR).
@@ -64,6 +68,7 @@ Every sentence in a stub must trace to a cited commit, diff line or comment. Do 
 | `adr_mine.py` | `--no-comments` | skip TODO and NOTE comment mining |
 | `adr_mine.py` | `--out-dir DIR` | write one stub per candidate, numbered after the highest existing ADR; never overwrites |
 | `adr_mine.py` | `--stubs` | also print each stub (JSON: `stub_markdown`) |
+| `adr_mine.py` | `--exclude GLOB` | leave matching paths out of config and comment mining, for example `tests/fixtures` (repeatable) |
 | `adr_lint.py` | `ADR_DIR` | the folder to check (default `docs/adr`) |
 | `adr_lint.py` | `--strict` | warnings also make the exit code 1 |
 | both | `--json` | JSON output |
@@ -80,7 +85,7 @@ Every sentence in a stub must trace to a cited commit, diff line or comment. Do 
 
 | Lint rule | Level | Meaning |
 |---|---|---|
-| `ADR-GAP` | error | a number missing between the lowest and highest ADR |
+| `ADR-GAP` | error | a number, or a run of numbers, missing between the lowest and highest ADR |
 | `ADR-DUP` | error | two files share a number |
 | `ADR-STATUS` | error | no status, or one outside proposed, accepted, rejected, deprecated, superseded, draft |
 | `ADR-SUPERSEDED` | error | superseded with no link to, or number of, the replacing ADR |
@@ -88,6 +93,8 @@ Every sentence in a stub must trace to a cited commit, diff line or comment. Do 
 | `ADR-TITLE` | error | no level-one heading |
 | `ADR-BACKLINK` | warning | B replaces A, but B does not mention A |
 | `ADR-NAME` | warning | a Markdown file not named `NNNN-title.md` (README, index and template files are skipped) |
+| `ADR-READ` | error | an ADR file that cannot be read |
+| `ADR-EMPTY` | warning | no `NNNN-title.md` file in the folder, so it is probably the wrong folder |
 
 ## Output format
 
@@ -117,3 +124,4 @@ Every sentence in a stub must trace to a cited commit, diff line or comment. Do 
 
 - `release-notes-verifier` uses the same git history to check what a release says against what changed.
 - `repo-onboarding-guide` can link the accepted ADRs from its "where things live" section.
+- `adr-writer` (docs plugin, claude-dev-skills) and `decision-log` (ways-of-working-skills): an architecture choice with options goes to adr-writer once an RFC is accepted; operational decisions with a review date go to decision-log; undocumented past decisions go to adr-miner.

@@ -1,6 +1,6 @@
 ---
 name: readme-who-what-why
-description: Check whether a README answers six questions in its first screen (what it is in one sentence, who it is for, why it exists or what it replaces, how to install in one block, how to run one example, where to ask) with a bundled script that scores presence and position of each, flags hype words, and prints the gaps as a to-do list; then fix the gaps with verified text. Use when asked to review, critique, score or improve a README, before publishing or announcing a repository, when a README "does not explain what this is", or to add a README gate to CI. Not for checking whether README commands and paths still work (use docs-truth-check) and not for writing long-form documentation.
+description: "Check whether a README's first screen answers six questions (what it is, who it is for, why it exists, how to install, one example, where to ask), flag hype words, list the gaps as a to-do list, then fix them with verified text. Use when asked to \"review my README\", before publishing or announcing a repository, or to add a README gate to CI. Not for checking whether README commands still work (docs-truth-check), writing a README from scratch (readme-author), or long-form documentation."
 license: MIT
 compatibility: Python 3.11 or newer on PATH as python3. Standard library only, no network access.
 metadata:
@@ -31,6 +31,8 @@ The script reports where it found each answer and quotes the evidence; it does n
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/readme-who-what-why/scripts/readme_check.py" README.md
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/readme-who-what-why/scripts/readme_check.py" README.md --json --screen-lines 30
    ```
+
+   If this skill was copied into `.claude/skills/` without the plugin system, `${CLAUDE_PLUGIN_ROOT}` is empty. Replace `${CLAUDE_PLUGIN_ROOT}/skills/readme-who-what-why` with the path to this skill's folder, for example `.claude/skills/readme-who-what-why`, and run the command from the repository root. The same applies to any other script command in this skill.
 
 2. **Read the element table and the to-do list.** Each element is `first screen` (2 points), `later` (1) or `missing` (0), out of 12. Hype words are listed with line numbers.
 3. **Check the evidence column by eye.** The detectors are keyword based: "without" may count as a why, a `## Usage` heading as an example. Where the evidence does not really answer the question, treat the element as missing.
@@ -76,3 +78,4 @@ Exit codes: 0 every element in the first screen and no hype words, 1 gaps or hyp
 
 - `docs-truth-check` to verify the commands, paths and versions the README mentions.
 - `agent-context-writer` for AGENTS.md and CLAUDE.md, which serve agents rather than people.
+- `readme-author` (docs plugin, claude-dev-skills): readme-author writes or rewrites the README; readme-who-what-why checks six first-screen questions and fails CI when they are unanswered.

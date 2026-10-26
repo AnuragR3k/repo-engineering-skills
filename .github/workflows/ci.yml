@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
       - name: Repository validator
@@ -36,22 +36,25 @@ jobs:
   tests:
     name: Tests and lint
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
-      - run: python3 -m pip install pytest ruff
+      - run: python -m pip install pytest ruff
       - run: ruff check .
-      - run: python3 -m pytest -q
+      - run: python -m pytest -q
 
   container-build:
     name: Build the container image and run it
@@ -66,7 +69,7 @@ jobs:
           docker build --build-arg VERSION=ci -t repo-engineering-skills:ci .
           docker run --rm repo-engineering-skills:ci --help > help.txt && grep "^usage: repo-engineering <subcommand>" help.txt
           docker run --rm repo-engineering-skills:ci > /dev/null && grep -c "^  [a-z]" help.txt
-          for s in docs-truth repo-facts audit-validate context-lint readme-check test-gaps onboarding onboarding-lint restructure adr adr-lint hygiene release-notes; do docker run --rm repo-engineering-skills:ci "$s" --help > /dev/null; done
+          for s in docs-truth repo-facts audit-validate context-lint readme-check test-gaps onboarding onboarding-lint restructure adr adr-lint hygiene release-notes branch-sweep plan-grill registry-preflight; do docker run --rm repo-engineering-skills:ci "$s" --help > /dev/null; done
           docker run --rm --entrypoint git repo-engineering-skills:ci --version
           docker run --rm repo-engineering-skills:ci --version
           test "$(docker run --rm --entrypoint id repo-engineering-skills:ci -u)" = "1000"
@@ -80,7 +83,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
       - name: Install the Claude Code CLI

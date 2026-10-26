@@ -4,8 +4,68 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- `untested-entry-points`: `--methods` also lists public methods of public Python classes as their own units, so a class that is mentioned in a test but has untested methods shows up. Thanks @AnuragR3k.
+
+## [0.6.0] - 2026-10-26
+
+### Added
+
+- `mcp-registry-publish-preflight`: `registry_preflight.py` checks an MCP server repository offline before `mcp-publisher publish`: server.json required fields, name format, description and title length, version ranges and `latest`, allowed registry base URLs and OCI hosts, transport types and https remotes, `_meta` keys the registry drops and the 4096-byte publisher-provided limit, npm `mcpName`, the `mcp-name:` marker and its boundary in the README that PyPI, NuGet or crates.io actually shows (following pyproject `readme`), the Dockerfile `io.modelcontextprotocol.server.name` label, MCPB `fileSha256`, version drift against local manifests, and the repository link. An optional DNS TXT or HTTP proof record is checked for format, base64, key size and placement, and the namespace against `--domain` or `--github-owner`. Every rule cites the registry document or validator code it comes from (`references/rules.md`). No network. Subcommand `registry-preflight`.
+
 ### Changed
 
+- Version 0.6.0 in `plugin.json`, `marketplace.json`, the dispatcher and the README container examples.
+
+## [0.5.0] - 2026-10-18
+
+### Added
+
+- `adr-miner`: `adr_mine.py --exclude GLOB` (repeatable) leaves test fixtures and vendored code out of config and comment mining; on this repository it removes two candidates that came from fixture files.
+- `adr-miner`: `adr_lint.py` reports a run of missing numbers as one `ADR-GAP` finding ("no ADRs numbered 0003 to 0008"), warns `ADR-EMPTY` when the folder holds no `NNNN-title.md` file, reports an unreadable ADR as `ADR-READ`, and accepts `.MD` file names.
+- README: a real output sample on the first screen.
+
+### Fixed
+
+- `cited-codebase-audit`: `repo_facts.py` no longer crashes on a `package.json` or `pyproject.toml` whose `scripts`, `bin` or `project` is the wrong type, finds `if __name__=="__main__":` without spaces, lower-case Dockerfile `entrypoint` and `[project.gui-scripts]`, and exits 2 with a message when `--out` cannot be written.
+- `cited-codebase-audit`: `audit_validate.py` exits 2 on a report that is not UTF-8, on `--min-accept` outside 0 to 100 and on an unwritable `--out`, and rejects a citation path with a NUL byte instead of crashing.
+- `readme-who-what-why`: `readme_check.py` exits 2 on a file that is not UTF-8, skips YAML front matter, does not take a setext heading for the opening sentence, ignores hype words inside inline code, notes an empty file and a code fence that is never closed (whose install command still counts).
+- `release-notes-verifier`: a note naming `` `${VAR}` `` now matches a commit naming `VAR`, and `Fixes #N` or `Closes #N` in a commit body links the commit to a note citing `#N`. This repository's own 0.4.1 notes were reported as unmatched before.
+
+### Changed
+
+- Descriptions of `adr-miner`, `docs-truth-check` and `stale-branch-sweep` name their neighbours more precisely, checked against the labelled trigger prompts in the hub's research notes.
+
+## [0.4.1] - 2026-10-09
+
+### Changed
+
+- Resolve literal setuptools and hatch dynamic versions without executing code,
+  and mark unresolved version claims as unverified instead of skipping them.
+- Skills that run a script through `${CLAUDE_PLUGIN_ROOT}` now say how to run it by the skill folder's path when the skill is copied without the plugin system (portability findings, #25).
+
+## [0.4.0] - 2026-10-05
+
+### Added
+
+- `stale-branch-sweep`: `stale_branch_sweep.py` joins saved `gh api .../branches`, `git for-each-ref` (all and `--merged`) and `gh pr list --state all` exports, gives each remote branch one status (base, protected, open-pr, merged, stale, no-ref, active) with the last committer as owner, and prints `git push --delete` commands for merged branches and commented ones for stale branches; it never runs them. Squash-merged branches are found by matching the merged PR's head commit. Subcommand `branch-sweep`.
+- `plan-grill`: a fixed question set for an implementation plan (scope, interfaces, data, failure modes, rollout, tests, open questions) and `plan_grill.py`, which checks the Markdown for the seven sections, thin sections, placeholders, a missing rollback, failure modes without a list, tests without a kind, and questions with no owner or answer, each with its line. No model calls. Subcommand `plan-grill`.
+
+### Changed
+
+- Version 0.4.0 in `plugin.json`, `marketplace.json`, the dispatcher and the README container examples.
+
+## [0.3.1] - 2026-10-05
+
+### Changed
+
+- Rewrote all ten skill descriptions to 450 to 556 characters (from 681 to 948): each starts with a verb, states the goal before the mechanism, carries one quoted phrase a user would type, a "Use when ..." sentence and a "Not for ..." boundary (`repo-hygiene-bundle` had none), and stays double-quoted.
+- Related sections state the boundary with the overlapping skills in other packs: `readme-author`, `release-notes`, `onboarding-doc`, `github-actions-author`, `adr-writer` and `test-gap-finder` (claude-dev-skills), `decision-log` (ways-of-working-skills) and `agent-config-audit` (agent-security-skills).
+- `docs_truth_check.py` and `release_notes_verify.py` decode subprocess output as UTF-8 (other calls already did), tests open text files with `encoding="utf-8"`, and CI runs tests and ruff on `windows-latest` as well as Ubuntu and macOS.
+- The plugin and root READMEs mention technical due diligence, the import dependency graph and bus factor (not measured).
+- `scripts/validate_plugin.py` now fails when a description is over 600 characters, is not double-quoted, or lacks "Use " or "Not for"; `tests/test_validate_plugin.py` covers each rule and the existing `## Limits` requirement.
+- Version 0.3.1 in `plugin.json`, `marketplace.json`, the dispatcher and the README container examples.
 - `docs-truth-check` also verifies environment defaults read through `from os import environ, getenv`, including aliased imports (#13, thanks @harshit3355).
 
 ## [0.3.0] - 2026-10-04
@@ -59,7 +119,8 @@ The skill scripts are published as a container image on GitHub Packages, using o
 - `untested-entry-points`: `test_gaps.py` ranks untested public functions and entry points for Python, JavaScript and TypeScript, and writes skipped or todo characterisation test stubs for pytest, unittest, jest, vitest and node:test.
 - Fixture repositories with planted defects for every script, an offline pytest suite, `scripts/validate_plugin.py`, and a CI workflow that runs the tests, ruff, the validator, `claude plugin validate --strict`, and the docs and README checkers on this repository.
 
-[Unreleased]: https://github.com/basitalisandhu/repo-engineering-skills/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/basitalisandhu/repo-engineering-skills/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/basitalisandhu/repo-engineering-skills/compare/v0.4.0...v0.4.1
 [0.3.0]: https://github.com/basitalisandhu/repo-engineering-skills/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/basitalisandhu/repo-engineering-skills/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/basitalisandhu/repo-engineering-skills/compare/v0.1.0...v0.1.1

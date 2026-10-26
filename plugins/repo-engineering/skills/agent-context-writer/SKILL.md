@@ -1,6 +1,6 @@
 ---
 name: agent-context-writer
-description: Write or refresh AGENTS.md and CLAUDE.md so they hold only what an agent cannot learn by reading the code (commands that are in no manifest, conventions, forbidden actions, environment setup, where to look first), and lint the result with a bundled script that flags lines restating package.json scripts, pyproject scripts, Makefile or justfile targets, dependency lists, pinned runtime versions or directory trees, paths that do not exist, generic advice, and length over a budget. Use when asked to create, write, update, shorten or clean up AGENTS.md, CLAUDE.md or another agent context file, after /init produced a long file, or when agents keep ignoring a bloated context file. Not for auditing agent permissions, hooks or MCP configuration (a security review), and not for human onboarding docs.
+description: "Write or refresh AGENTS.md and CLAUDE.md so they hold only what an agent cannot learn from the code, and lint them for lines that restate manifests, scripts, dependency lists or directory trees, paths that do not exist, generic advice and length over a budget. Use when asked to \"shorten our CLAUDE.md\", after /init produced a long file, or when agents ignore a bloated context file. Not for auditing agent permissions, hooks or MCP configuration (agent-config-audit), or human onboarding docs."
 license: MIT
 compatibility: Python 3.11 or newer on PATH as python3. Standard library only, no network access.
 metadata:
@@ -45,6 +45,8 @@ Every line you write must come from something you verified: a file you opened, a
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/agent-context-writer/scripts/context_lint.py" AGENTS.md .
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/agent-context-writer/scripts/context_lint.py" CLAUDE.md . --max-lines 40 --json
    ```
+
+   If this skill was copied into `.claude/skills/` without the plugin system, `${CLAUDE_PLUGIN_ROOT}` is empty. Replace `${CLAUDE_PLUGIN_ROOT}/skills/agent-context-writer` with the path to this skill's folder, for example `.claude/skills/agent-context-writer`, and run the command from the repository root. The same applies to any other script command in this skill.
 
 5. **Fix every finding**: delete restated manifest facts, fix or delete missing paths, replace generic advice with the specific rule behind it or delete it, and cut to the budget.
 6. **Show the user the diff** of the context file and the lint result. When both AGENTS.md and CLAUDE.md exist, keep one as the source and make the other a one-line pointer to it, if the user agrees.
@@ -91,3 +93,4 @@ The report always prints the file's length against the budget. Exit codes: 0 cle
 
 - `docs-truth-check` verifies paths, flags and symbols in AGENTS.md and CLAUDE.md along with the rest of the docs.
 - `readme-who-what-why` for the README, which is written for people rather than agents.
+- `agent-config-audit` (agent-security-skills) audits agent configuration for risk; this skill writes a lean AGENTS.md or CLAUDE.md and does not judge permissions, hooks or MCP servers.

@@ -59,7 +59,7 @@ def test_stubs_are_madr_and_cite_their_source(history, tmp_path):
     repo, shas = history
     out_dir = tmp_path / "adr"
     out_dir.mkdir()
-    (out_dir / "0007-existing.md").write_text("# 7. Existing\n\n- Status: accepted\n")
+    (out_dir / "0007-existing.md").write_text("# 7. Existing\n\n- Status: accepted\n", encoding="utf-8")
     rc, rep = run_json(mod, [str(repo), "--json", "--out-dir", str(out_dir)])
     assert rc == 0
     names = sorted(p.name for p in out_dir.iterdir())
@@ -104,3 +104,19 @@ def test_package_json_swap_and_ci_file_added(tmp_path):
     reasons = {c["sha"]: c["reasons"] for c in rep["candidates"]}
     assert reasons == {swap: ["package.json: removed moment; added dayjs"],
                        ci: ["CI file .github/workflows/ci.yml added"]}
+
+
+def test_exclude_drops_fixture_config_and_comment_candidates(tmp_path):
+    repo = tmp_path / "repo"
+    git_commit(repo, "Initial commit", {"README.md": "# r\n"})
+    git_commit(repo, "Add fixtures", {
+        "tests/fixtures/app/Dockerfile": "FROM node:20\n",
+        "tests/fixtures/app/store.py": "# NOTE: sqlite because CI has no database\n",
+    })
+    git_commit(repo, "Add the real image", {"Dockerfile": "FROM python:3.12\n"})
+    rc, rep = run_json(mod, [str(repo), "--json"])
+    assert rc == 0 and len(rep["candidates"]) == 3
+    rc, rep = run_json(mod, [str(repo), "--json", "--exclude", "tests/fixtures"])
+    assert rc == 0 and [c["title"] for c in rep["candidates"]] == ["Add the real image"]
+    rc, rep = run_json(mod, [str(repo), "--json", "--exclude", "tests/*", "--exclude", "Dockerfile"])
+    assert rc == 0 and rep["candidates"] == []
